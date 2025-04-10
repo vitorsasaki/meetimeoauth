@@ -35,6 +35,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
     
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<Object> handleRateLimitException(RateLimitException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        body.put("error", "Rate Limit Exceeded");
+        body.put("retryAfter", ex.getRetryAfter());
+        
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfter() / 1000)) // Converter para segundos
+                .body(body);
+    }
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();

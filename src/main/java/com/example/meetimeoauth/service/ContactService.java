@@ -1,5 +1,6 @@
 package com.example.meetimeoauth.service;
 
+import java.util.List;
 import com.example.meetimeoauth.dto.ContactDTO;
 
 public interface ContactService {
@@ -31,4 +32,14 @@ public interface ContactService {
      * @return detalhes do contato criado
      */
     Object createContact(String authToken, ContactDTO contact);
+    
+    /**
+     * Cria múltiplos contatos no HubSpot em uma única operação em lote
+     * Implementa tratamento para respeitar os limites de rate limit da API
+     * 
+     * @param authToken token de autenticação
+     * @param contacts  lista de contatos para criar
+     * @return resultado da operação em lote
+     */
+    Object createContactsBatch(String authToken, List<ContactDTO> contacts);
 } 
