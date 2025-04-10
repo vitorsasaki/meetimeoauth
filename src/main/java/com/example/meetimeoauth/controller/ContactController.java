@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/contacts")
@@ -58,6 +60,10 @@ public class ContactController {
             @RequestHeader("Authorization") String authToken,
             @RequestBody ContactDTO contact) {
         logger.info("Criando contato com email: {}", contact.getEmail());
+        
+        // Log do token para depuração (ocultando partes do token)
+        logAuthTokenPrefix(authToken);
+        
         Object response = contactService.createContact(authToken, contact);
         return ResponseEntity.ok(response);
     }
@@ -75,23 +81,98 @@ public class ContactController {
             @RequestHeader("Authorization") String authToken,
             @RequestBody BatchContactRequestDTO request) {
         
-        logger.info("Criando lote de {} contatos", request.getContacts().size());
-        
-        if (request.getContacts() == null || request.getContacts().isEmpty()) {
-            logger.warn("Tentativa de criar lote vazio de contatos");
-            return ResponseEntity.badRequest().body("A lista de contatos não pode estar vazia");
+        try {
+            logger.info("Recebida requisição para criar lote de contatos");
+            
+            // Log do token para depuração (ocultando partes do token)
+            logAuthTokenPrefix(authToken);
+            
+            // Validar a estrutura da requisição
+            if (request == null) {
+                logger.warn("Requisição inválida: objeto request é nulo");
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "invalid_request");
+                errorResponse.put("message", "Requisição inválida: corpo da requisição não pode ser nulo");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // Validar a lista de contatos
+            if (request.getContacts() == null) {
+                logger.warn("Requisição inválida: lista de contatos é nula");
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "invalid_request");
+                errorResponse.put("message", "Requisição inválida: lista de contatos não pode ser nula");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            logger.info("Criando lote de {} contatos", request.getContacts().size());
+            
+            if (request.getContacts().isEmpty()) {
+                logger.warn("Tentativa de criar lote vazio de contatos");
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "invalid_request");
+                errorResponse.put("message", "A lista de contatos não pode estar vazia");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // Limitar o número de contatos por requisição
+            if (request.getContacts().size() > 100) {
+                logger.warn("Tentativa de criar lote com mais de 100 contatos ({})", request.getContacts().size());
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "invalid_request");
+                errorResponse.put("message", "Número máximo de contatos por lote excedido. Máximo permitido: 100");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // Log de alguns emails para depuração
+            logSampleEmails(request.getContacts());
+            
+            Object response = contactService.createContactsBatch(authToken, request.getContacts());
+            logger.info("Lote de contatos criado com sucesso");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao processar requisição de criação em lote: {}", e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "internal_error");
+            errorResponse.put("message", "Erro interno ao processar a requisição: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
-        
-        // Limitar o número de contatos por requisição
-        if (request.getContacts().size() > 100) {
-            logger.warn("Tentativa de criar lote com mais de 100 contatos ({})", request.getContacts().size());
-            return ResponseEntity.badRequest()
-                    .body("Número máximo de contatos por lote excedido. Máximo permitido: 100");
+    }
+    
+    /**
+     * Loga apenas o prefixo do token de autenticação para fins de depuração
+     */
+    private void logAuthTokenPrefix(String authToken) {
+        if (authToken != null && authToken.length() > 15) {
+            String tokenPrefix = authToken.substring(0, Math.min(15, authToken.length()));
+            logger.debug("Token de autorização fornecido (prefixo): {}...", tokenPrefix);
+        } else {
+            logger.warn("Token de autorização inválido ou muito curto");
         }
-        
-        Object response = contactService.createContactsBatch(authToken, request.getContacts());
-        logger.info("Lote de contatos criado com sucesso");
-        
-        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Loga uma amostra de emails da lista de contatos
+     */
+    private void logSampleEmails(List<ContactDTO> contacts) {
+        if (contacts != null && !contacts.isEmpty()) {
+            int sampleSize = Math.min(3, contacts.size());
+            StringBuilder sampleEmails = new StringBuilder();
+            
+            for (int i = 0; i < sampleSize; i++) {
+                ContactDTO contact = contacts.get(i);
+                if (contact != null && contact.getEmail() != null) {
+                    if (sampleEmails.length() > 0) {
+                        sampleEmails.append(", ");
+                    }
+                    sampleEmails.append(contact.getEmail());
+                }
+            }
+            
+            if (sampleEmails.length() > 0) {
+                logger.debug("Amostra de emails a serem criados: {}", sampleEmails.toString());
+            }
+        }
     }
 } 

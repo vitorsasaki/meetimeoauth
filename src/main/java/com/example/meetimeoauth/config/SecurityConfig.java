@@ -23,8 +23,8 @@ public class SecurityConfig {
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeHttpRequests(authorize -> authorize
-                // Permitir acesso a todos os endpoints durante o desenvolvimento
-                .anyRequest().permitAll()
+                .requestMatchers("/api/**").permitAll()
+                .anyRequest().authenticated()
             );
         
         return http.build();

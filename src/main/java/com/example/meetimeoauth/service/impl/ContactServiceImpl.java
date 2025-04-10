@@ -262,6 +262,7 @@ public class ContactServiceImpl implements ContactService {
                     }
                 } else {
                     // Se for outro tipo de erro, propagar a exceção
+                    logger.error("Erro HTTP durante a requisição: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
                     throw new ApiException("Erro HTTP " + e.getStatusCode() + ": " + e.getResponseBodyAsString(), e);
                 }
             } catch (HttpServerErrorException e) {
@@ -290,9 +291,27 @@ public class ContactServiceImpl implements ContactService {
         throw new ApiException("Erro desconhecido ao executar requisição com retry");
     }
     
+    /**
+     * Cria os cabeçalhos HTTP para requisições à API do HubSpot
+     * 
+     * @param authToken Token de autorização
+     * @return HttpHeaders configurados com o token de autorização
+     */
     private HttpHeaders createHeaders(String authToken) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", authToken);
+        
+        // Verifica se o token já começa com "Bearer" ou outro prefixo
+        if (authToken != null && !authToken.trim().isEmpty()) {
+            // Se o token não começar com "Bearer", adiciona o prefixo
+            if (!authToken.startsWith("Bearer ")) {
+                authToken = "Bearer " + authToken;
+            }
+            logger.debug("Configurando cabeçalho Authorization: {}", authToken.substring(0, 15) + "...");
+            headers.set("Authorization", authToken);
+        } else {
+            logger.warn("Token de autorização vazio ou nulo");
+        }
+        
         return headers;
     }
 } 
