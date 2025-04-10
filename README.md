@@ -12,14 +12,15 @@ Este projeto é uma API REST desenvolvida em Java com Spring Boot para integraç
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/meetimeoauth.git
+git clone https://github.com/vitorsasaki/meetimeoauth.git
 cd meetimeoauth
 ```
 
 2. Configure as credenciais do HubSpot no arquivo `application.properties`:
 ```properties
-hubspot.client.id=seu-client-id
-hubspot.client.secret=seu-client-secret
+hubspot.client.id=fd6b006a-c180-4046-b85a-80c8d285af0e
+hubspot.client.secret=d25a0397-7699-4230-9686-0715481ff145
+hubspot.app-id=10689513
 hubspot.redirect.url=http://localhost:8080/api/auth/callback
 ```
 
@@ -46,7 +47,7 @@ A aplicação estará disponível em: http://localhost:8080
 
 ### Autenticação OAuth
 
-- **Iniciar fluxo OAuth**: `GET /api/auth/login`
+- **Iniciar fluxo OAuth**: `GET /api/auth/authorize`
   - Redireciona para a página de autorização do HubSpot
 
 - **Callback OAuth**: `GET /api/auth/callback?code={code}`
