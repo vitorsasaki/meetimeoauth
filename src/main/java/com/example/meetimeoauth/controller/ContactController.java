@@ -1,5 +1,6 @@
 package com.example.meetimeoauth.controller;
 
+import com.example.meetimeoauth.config.TokenConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,7 +63,7 @@ public class ContactController {
         logger.info("Criando contato com email: {}", contact.getEmail());
         
         // Log do token para depuração (ocultando partes do token)
-        logAuthTokenPrefix(authToken);
+        TokenConfig.logAuthTokenPrefix(authToken, ContactController.class);
         
         Object response = contactService.createContact(authToken, contact);
         return ResponseEntity.ok(response);
@@ -85,7 +86,7 @@ public class ContactController {
             logger.info("Recebida requisição para criar lote de contatos");
             
             // Log do token para depuração (ocultando partes do token)
-            logAuthTokenPrefix(authToken);
+            TokenConfig.logAuthTokenPrefix(authToken, ContactController.class);
             
             // Validar a estrutura da requisição
             if (request == null) {
@@ -105,6 +106,7 @@ public class ContactController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
+            TokenConfig.logListDetails(request.getContacts(), "contatos", ContactController.class);
             logger.info("Criando lote de {} contatos", request.getContacts().size());
             
             if (request.getContacts().isEmpty()) {
@@ -125,7 +127,7 @@ public class ContactController {
             }
             
             // Log de alguns emails para depuração
-            logSampleEmails(request.getContacts());
+            TokenConfig.logSampleEmails(request.getContacts(), ContactController.class);
             
             Object response = contactService.createContactsBatch(authToken, request.getContacts());
             logger.info("Lote de contatos criado com sucesso");
@@ -137,42 +139,6 @@ public class ContactController {
             errorResponse.put("error", "internal_error");
             errorResponse.put("message", "Erro interno ao processar a requisição: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
-    
-    /**
-     * Loga apenas o prefixo do token de autenticação para fins de depuração
-     */
-    private void logAuthTokenPrefix(String authToken) {
-        if (authToken != null && authToken.length() > 15) {
-            String tokenPrefix = authToken.substring(0, Math.min(15, authToken.length()));
-            logger.debug("Token de autorização fornecido (prefixo): {}...", tokenPrefix);
-        } else {
-            logger.warn("Token de autorização inválido ou muito curto");
-        }
-    }
-    
-    /**
-     * Loga uma amostra de emails da lista de contatos
-     */
-    private void logSampleEmails(List<ContactDTO> contacts) {
-        if (contacts != null && !contacts.isEmpty()) {
-            int sampleSize = Math.min(3, contacts.size());
-            StringBuilder sampleEmails = new StringBuilder();
-            
-            for (int i = 0; i < sampleSize; i++) {
-                ContactDTO contact = contacts.get(i);
-                if (contact != null && contact.getEmail() != null) {
-                    if (sampleEmails.length() > 0) {
-                        sampleEmails.append(", ");
-                    }
-                    sampleEmails.append(contact.getEmail());
-                }
-            }
-            
-            if (sampleEmails.length() > 0) {
-                logger.debug("Amostra de emails a serem criados: {}", sampleEmails.toString());
-            }
         }
     }
 } 
