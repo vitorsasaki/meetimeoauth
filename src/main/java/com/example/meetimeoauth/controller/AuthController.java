@@ -28,20 +28,24 @@ public class AuthController {
     
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+    private final OAuthService oauthService;
+    private final String clientId;
+    private final String authUrl;
+    private final String redirectUrl;
+    private final String scopes;
+
     @Autowired
-    private OAuthService oauthService;
-    
-    @Value("${hubspot.client.id}")
-    private String clientId;
-    
-    @Value("${hubspot.auth.url}")
-    private String authUrl;
-    
-    @Value("${hubspot.redirect.url}")
-    private String redirectUrl;
-    
-    @Value("${hubspot.scopes}")
-    private String scopes;
+    public AuthController(OAuthService oauthService,
+                         @Value("${hubspot.client.id}") String clientId,
+                         @Value("${hubspot.auth.url}") String authUrl,
+                         @Value("${hubspot.redirect.url}") String redirectUrl,
+                         @Value("${hubspot.scopes}") String scopes) {
+        this.oauthService = oauthService;
+        this.clientId = clientId;
+        this.authUrl = authUrl;
+        this.redirectUrl = redirectUrl;
+        this.scopes = scopes;
+    }
 
     /**
      * Endpoint responsável por gerar e retornar a URL de autorização

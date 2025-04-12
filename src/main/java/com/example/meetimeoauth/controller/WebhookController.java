@@ -15,8 +15,12 @@ public class WebhookController {
     
     private static final Logger logger = LoggerFactory.getLogger(WebhookController.class);
 
+    private final WebhookValidationService validationService;
+
     @Autowired
-    private WebhookValidationService validationService;
+    public WebhookController(WebhookValidationService validationService) {
+        this.validationService = validationService;
+    }
 
     @PostMapping("/contact-creation")
     public ResponseEntity<String> handleContactCreation(

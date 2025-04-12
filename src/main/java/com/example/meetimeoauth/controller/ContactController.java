@@ -28,8 +28,12 @@ public class ContactController {
 
     private static final Logger logger = LoggerFactory.getLogger(ContactController.class);
 
+    private final ContactService contactService;
+
     @Autowired
-    private ContactService contactService;
+    public ContactController(ContactService contactService) {
+        this.contactService = contactService;
+    }
     
     @GetMapping
     public ResponseEntity<Object> listContacts(
