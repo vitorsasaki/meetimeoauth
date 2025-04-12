@@ -44,14 +44,14 @@ public class ContactController {
         return ResponseEntity.ok(contactService.listContacts(authToken, offset, limit));
     }
     
-    @GetMapping("/{contactId}")
+/*    @GetMapping("/{contactId}")
     public ResponseEntity<Object> getContact(
             @RequestHeader("Authorization") String authToken, 
             @PathVariable String contactId) {
         logger.info("Buscando contato com ID: {}", contactId);
         return ResponseEntity.ok(contactService.getContact(authToken, contactId));
     }
-    
+    */
     /**
      * Cria um novo contato no HubSpot CRM
      * 
